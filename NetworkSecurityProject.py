@@ -4,6 +4,7 @@ import pandas as pd
 from sklearn.model_selection import train_test_split
 from sklearn.metrics import accuracy_score, precision_score, recall_score, f1_score, hamming_loss
 from tensorflow import keras, saved_model
+from tensorflow.keras.models import load_model
 from keras import layers
 from keras import callbacks
 from sklearn.metrics import accuracy_score
