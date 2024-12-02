@@ -3,7 +3,7 @@ import numpy as np
 import pandas as pd 
 from sklearn.model_selection import train_test_split
 from sklearn.metrics import accuracy_score, precision_score, recall_score, f1_score, hamming_loss
-from tensorflow import keras
+from tensorflow import keras, saved_model
 from keras import layers
 from keras import callbacks
 from sklearn.metrics import accuracy_score
@@ -76,6 +76,8 @@ if(TRAIN_MODEL):
     history_df = pd.DataFrame(history.history)
     history_df.loc[:, ['loss']].plot();
     print("Minimum validation loss: {}".format(history_df['val_loss'].min()))
+
+    model.save('my_model.h5') 
 
 else:
     model = load_model('my_model.h5')
