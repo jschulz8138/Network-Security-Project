@@ -1,13 +1,11 @@
-
 import numpy as np
 import pandas as pd 
 from sklearn.model_selection import train_test_split
 from sklearn.metrics import accuracy_score, precision_score, recall_score, f1_score, hamming_loss
 from tensorflow import keras, saved_model
-from keras import layers
-from keras import callbacks
+from tensorflow.keras.models import load_model
+from tensorflow.keras import layers, callbacks
 from sklearn.metrics import accuracy_score
-from keras import load_model
 
 #Set this to 1 if you want to train a model, 0 if you want to load a trained model
 TRAIN_MODEL = 0
