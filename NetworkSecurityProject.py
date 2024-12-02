@@ -11,31 +11,30 @@ from sklearn.metrics import accuracy_score
 #Set this to 1 if you want to train a model, 0 if you want to load a trained model
 TRAIN_MODEL = 0
 
-df = pd.read_csv("ACI-IoT-2023.csv")
-df.drop(["Flow Bytes/s","Timestamp","Flow Packets/s"],axis=1,inplace=True)
-df.head()
-df.Label.value_counts()
-features = df.columns.tolist()
-features.remove("Label")
-features.remove("Flow ID")
-features.remove("Src IP")
-features.remove("Dst IP")
 
-X = df[features]
-y= df["Label"]
-X = pd.get_dummies(X, dtype=int)
-y = pd.get_dummies(y,dtype=int)
-X_train ,X_test, y_train, y_test = train_test_split(X,y,test_size = 0.2, stratify=y, random_state = 42)
+def train_model():
+    df = pd.read_csv("ACI-IoT-2023.csv")
+    df.drop(["Flow Bytes/s","Timestamp","Flow Packets/s"],axis=1,inplace=True)
+    df.head()
+    df.Label.value_counts()
+    features = df.columns.tolist()
+    features.remove("Label")
+    features.remove("Flow ID")
+    features.remove("Src IP")
+    features.remove("Dst IP")
 
-index_bigger = int(y_train.shape[0] * 0.7)
+    X = df[features]
+    y= df["Label"]
+    X = pd.get_dummies(X, dtype=int)
+    y = pd.get_dummies(y,dtype=int)
+    X_train ,X_test, y_train, y_test = train_test_split(X,y,test_size = 0.2, stratify=y, random_state = 42)
 
-X_val = X_train.iloc[index_bigger:,]
-X_train = X_train.iloc[:index_bigger,]
-y_val = y_train.iloc[index_bigger:]
-y_train = y_train.iloc[:index_bigger]
+    index_bigger = int(y_train.shape[0] * 0.7)
 
-
-if(TRAIN_MODEL):
+    X_val = X_train.iloc[index_bigger:,]
+    X_train = X_train.iloc[:index_bigger,]
+    y_val = y_train.iloc[index_bigger:]
+    y_train = y_train.iloc[:index_bigger]
     num_classes = 12  
 
     model = keras.Sequential([
@@ -78,24 +77,28 @@ if(TRAIN_MODEL):
 
     model.save('my_model.h5') 
 
-else:
+
+def predict():
     model = load_model('my_model.h5')
 
 
-y_preds = model.predict(X_test)
-y_preds.shape
-threshold = 0.5
-binary_preds = np.where(y_preds >= threshold, 1, 0)
+    y_preds = model.predict(X_test)
+    y_preds.shape
+    threshold = 0.5
+    binary_preds = np.where(y_preds >= threshold, 1, 0)
 
-accuracy = accuracy_score(y_test, binary_preds)
-precision = precision_score(y_test, binary_preds, average='micro')
-recall = recall_score(y_test, binary_preds, average='micro')
-f1 = f1_score(y_test, binary_preds, average='micro')
-hamming_loss_val = hamming_loss(y_test, binary_preds)
+    accuracy = accuracy_score(y_test, binary_preds)
+    precision = precision_score(y_test, binary_preds, average='micro')
+    recall = recall_score(y_test, binary_preds, average='micro')
+    f1 = f1_score(y_test, binary_preds, average='micro')
+    hamming_loss_val = hamming_loss(y_test, binary_preds)
 
-print("Accuracy:", accuracy)
-print("Precision:", precision)
-print("Recall:", recall)
-print("F1-score:", f1)
-print("Hamming loss:", hamming_loss_val)
+    print("Accuracy:", accuracy)
+    print("Precision:", precision)
+    print("Recall:", recall)
+    print("F1-score:", f1)
+    print("Hamming loss:", hamming_loss_val)
 
+
+if __name__ == "__main__":
+    predict()
