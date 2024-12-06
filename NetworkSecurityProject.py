@@ -8,7 +8,7 @@ from tensorflow.keras import layers, callbacks
 from sklearn.metrics import accuracy_score
 
 #Set this to 1 if you want to train a model, 0 if you want to load a trained model
-TRAIN_MODEL = 0
+TRAIN_MODEL = 1
 
 df = pd.read_csv("ACI-IoT-2023.csv")
 df.drop(["Flow Bytes/s","Timestamp","Flow Packets/s"],axis=1,inplace=True)
@@ -39,10 +39,10 @@ if(TRAIN_MODEL):
 
     model = keras.Sequential([
         layers.BatchNormalization(),
-        layers.Dense(units=16, activation='relu'),
+        layers.Dense(units=32, activation='relu'),
         layers.BatchNormalization(), 
         layers.Dropout(0.5), 
-        layers.Dense(units=4, activation='relu'),
+        layers.Dense(units=8, activation='relu'),
         layers.BatchNormalization(),  
         layers.Dropout(0.5), 
         layers.Dense(units=num_classes, activation='softmax')  
@@ -57,15 +57,15 @@ if(TRAIN_MODEL):
 
     early_stopping = callbacks.EarlyStopping(
         min_delta=0.001, # minimium amount of change to count as an improvement
-        patience=2, # how many epochs to wait before stopping
+        patience=4, # how many epochs to wait before stopping
         restore_best_weights=True,
     )
 
     history= model.fit(
         X_train, y_train,
         validation_data=(X_val, y_val),
-        batch_size=10,
-        epochs=1,
+        batch_size=32,
+        epochs=8,
         callbacks =[early_stopping],
         #Turn on or off for debugging, displays training
         #verbose=0
