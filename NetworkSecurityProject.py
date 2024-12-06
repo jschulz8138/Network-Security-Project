@@ -39,10 +39,10 @@ if(TRAIN_MODEL):
 
     model = keras.Sequential([
         layers.BatchNormalization(),
-        layers.Dense(units=32, activation='relu'),
+        layers.Dense(units=64, activation='relu'),
         layers.BatchNormalization(), 
         layers.Dropout(0.5), 
-        layers.Dense(units=8, activation='relu'),
+        layers.Dense(units=16, activation='relu'),
         layers.BatchNormalization(),  
         layers.Dropout(0.5), 
         layers.Dense(units=num_classes, activation='softmax')  
@@ -64,8 +64,8 @@ if(TRAIN_MODEL):
     history= model.fit(
         X_train, y_train,
         validation_data=(X_val, y_val),
-        batch_size=32,
-        epochs=8,
+        batch_size=128,
+        epochs=32,
         callbacks =[early_stopping],
         #Turn on or off for debugging, displays training
         #verbose=0
