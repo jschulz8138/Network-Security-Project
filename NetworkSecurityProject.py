@@ -95,9 +95,9 @@ threshold = 0.5
 binary_preds = np.where(y_preds >= threshold, 1, 0)
 
 accuracy = accuracy_score(y_test, binary_preds)
-# Propotyion of correctly predicted positives out of all positives (true or false)
+# Propotion of correctly predicted positives out of all positives (true or false)
 precision = precision_score(y_test, binary_preds, average='micro')
-# Propotyion of correctly predicted positives out of all ACTUAL positives (true positives & false negatives)
+# Propotion of correctly predicted positives out of all ACTUAL positives (true positives & false negatives)
 recall = recall_score(y_test, binary_preds, average='micro')
 # F1 balances both precision and recall (penalizes imbalance beween precision and recall)
 f1 = f1_score(y_test, binary_preds, average='micro')
@@ -125,20 +125,24 @@ attack_types = [attack for attack in y.columns.tolist() if attack in flood_types
 
 # Evaluate for each included flood attack type
 for attack in attack_types:
-    # Filter test samples for the specific attack
+    # Filter for specific attack types
     attack_indices = y_test[attack] == 1
     X_test_attack = X_test[attack_indices]
     y_test_attack = y_test[attack_indices]
 
-    if len(X_test_attack) > 0:  # Ensure there are samples for this attack type
+    if len(X_test_attack) > 0:
+        # Make predictions on specific attack type
         y_preds_attack = model.predict(X_test_attack)
+        # Convert to binary
         binary_preds_attack = np.where(y_preds_attack >= threshold, 1, 0)
 
+        # Calculate statistics for each specific flood attack type
         attack_accuracy = accuracy_score(y_test_attack, binary_preds_attack)
         attack_precision = precision_score(y_test_attack, binary_preds_attack, average='micro', zero_division=1)
         attack_recall = recall_score(y_test_attack, binary_preds_attack, average='micro', zero_division=1)
         attack_f1 = f1_score(y_test_attack, binary_preds_attack, average='micro', zero_division=1)
 
+        # Print calculated statistics
         print(f"Metrics for {attack}:")
         print(f"  Accuracy: {attack_accuracy:.4f}")
         print(f"  Precision: {attack_precision:.4f}")
@@ -158,35 +162,42 @@ print("\nThreshold Sensitivity Analysis:")
 # Defined list of flood attack types
 flood_types = ['ARP Spoofing', 'DNS Flood', 'ICMP Flood', 'SYN Flood', 'UDP Flood']
 
-# Threshold values to evaluate
+# Threshold values to evaluate (from 0.1 to 0.9 in 0.1 increments)
 threshold_values = np.arange(0.1, 1.0, 0.1)
-sensitivity_results = {attack: [] for attack in flood_types}
+# Directory to store results per attack types, containing a list of
+# threshold and F1-score pairs for each entry
+threshold_sensitivity_results = {attack: [] for attack in flood_types}
 
-# Analyze performance for different thresholds
+# Loop through diffrent thresholds to analyze performance
 for threshold in threshold_values:
     print(f"\nEvaluating for threshold: {threshold:.1f}")
     for attack in flood_types:
         if attack in y.columns:
-            # Filter test samples for the specific attack
+            # Filter for specific attack types
             attack_indices = y_test[attack] == 1
             X_test_attack = X_test[attack_indices]
             y_test_attack = y_test[attack_indices]
 
-            if len(X_test_attack) > 0:  # Ensure there are samples for this attack type
+            if len(X_test_attack) > 0:
+                # Make predictions on specific attack type
                 y_preds_attack = model.predict(X_test_attack)
+                # Convert to binary labels at current threshold
                 binary_preds_attack = np.where(y_preds_attack >= threshold, 1, 0)
 
+                # Calculate f1-score for specific attack type
                 attack_f1 = f1_score(y_test_attack, binary_preds_attack, average='micro', zero_division=1)
-                sensitivity_results[attack].append((threshold, attack_f1))
+                # Store threshold, f1-score pair in results
+                threshold_sensitivity_results[attack].append((threshold, attack_f1))
             else:
                 print(f"No test samples found for attack type: {attack}")
 
-# Plot the sensitivity analysis
+# Plot the results of sensitivity analysis
 plt.figure(figsize=(10, 6))
-for attack, results in sensitivity_results.items():
-    thresholds, f1_scores = zip(*results)
-    plt.plot(thresholds, f1_scores, label=f"{attack}")
+for attack, results in threshold_sensitivity_results.items():
+    thresholds, f1_scores = zip(*results)   #unpack threshold f1-score pair 
+    plt.plot(thresholds, f1_scores, label=f"{attack}") #plot for attack type
 
+# Add tiyle and labels for visualization
 plt.title("Threshold Sensitivity Analysis (F1-Score)")
 plt.xlabel("Threshold")
 plt.ylabel("F1-Score")
