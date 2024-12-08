@@ -10,10 +10,15 @@ from sklearn.metrics import accuracy_score
 #Set this to 1 if you want to train a model, 0 if you want to load a trained model
 TRAIN_MODEL = 1
 
+# Load and process data.
 df = pd.read_csv("ACI-IoT-2023.csv")
 df.drop(["Flow Bytes/s","Timestamp","Flow Packets/s"],axis=1,inplace=True)
+
+# Display dataset details.
 df.head()
 df.Label.value_counts()
+
+# Extract features and labels.
 features = df.columns.tolist()
 features.remove("Label")
 features.remove("Flow ID")
@@ -24,6 +29,8 @@ X = df[features]
 y= df["Label"]
 X = pd.get_dummies(X, dtype=int)
 y = pd.get_dummies(y,dtype=int)
+
+# Split data between training, validation and testing.
 X_train ,X_test, y_train, y_test = train_test_split(X,y,test_size = 0.2, stratify=y, random_state = 42)
 
 index_bigger = int(y_train.shape[0] * 0.7)
@@ -33,7 +40,7 @@ X_train = X_train.iloc[:index_bigger,]
 y_val = y_train.iloc[index_bigger:]
 y_train = y_train.iloc[:index_bigger]
 
-
+# Train or load model from file save
 if(TRAIN_MODEL):
     num_classes = 12  
 
@@ -80,7 +87,7 @@ if(TRAIN_MODEL):
 else:
     model = load_model('my_model.h5')
 
-
+# Evaluate model on test set
 y_preds = model.predict(X_test)
 y_preds.shape
 threshold = 0.5
@@ -98,3 +105,38 @@ print("Recall:", recall)
 print("F1-score:", f1)
 print("Hamming loss:", hamming_loss_val)
 
+
+
+#############################################
+# Experiment 1: Flood Types Attack Evaluation
+#############################################
+print("\nFlood Types Attack Evaluation:")
+
+# Defined list of flood attack types
+flood_types = ['ARP Spoofing', 'DNS Flood', 'ICMP Flood', 'SYN Flood', 'UDP Flood']
+# Get attack types (labels) to evaluate only from flood type attacks
+attack_types = [attack for attack in y.columns.tolist() if attack in flood_types]
+
+# Evaluate for each included flood attack type
+for attack in attack_types:
+    # Filter test samples for the specific attack
+    attack_indices = y_test[attack] == 1
+    X_test_attack = X_test[attack_indices]
+    y_test_attack = y_test[attack_indices]
+
+    if len(X_test_attack) > 0:  # Ensure there are samples for this attack type
+        y_preds_attack = model.predict(X_test_attack)
+        binary_preds_attack = np.where(y_preds_attack >= threshold, 1, 0)
+
+        attack_accuracy = accuracy_score(y_test_attack, binary_preds_attack)
+        attack_precision = precision_score(y_test_attack, binary_preds_attack, average='micro', zero_division=1)
+        attack_recall = recall_score(y_test_attack, binary_preds_attack, average='micro', zero_division=1)
+        attack_f1 = f1_score(y_test_attack, binary_preds_attack, average='micro', zero_division=1)
+
+        print(f"Metrics for {attack}:")
+        print(f"  Accuracy: {attack_accuracy:.4f}")
+        print(f"  Precision: {attack_precision:.4f}")
+        print(f"  Recall: {attack_recall:.4f}")
+        print(f"  F1-score: {attack_f1:.4f}")
+    else:
+        print(f"No test samples found for attack type: {attack}")
