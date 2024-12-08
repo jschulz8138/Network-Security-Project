@@ -6,9 +6,10 @@ from tensorflow import keras, saved_model
 from tensorflow.keras.models import load_model
 from tensorflow.keras import layers, callbacks
 from sklearn.metrics import accuracy_score
+import matplotlib.pyplot as plt
 
 #Set this to 1 if you want to train a model, 0 if you want to load a trained model
-TRAIN_MODEL = 1
+TRAIN_MODEL = 0
 
 # Load and process data.
 df = pd.read_csv("ACI-IoT-2023.csv")
@@ -94,8 +95,11 @@ threshold = 0.5
 binary_preds = np.where(y_preds >= threshold, 1, 0)
 
 accuracy = accuracy_score(y_test, binary_preds)
+# Propotyion of correctly predicted positives out of all positives (true or false)
 precision = precision_score(y_test, binary_preds, average='micro')
+# Propotyion of correctly predicted positives out of all ACTUAL positives (true positives & false negatives)
 recall = recall_score(y_test, binary_preds, average='micro')
+# F1 balances both precision and recall (penalizes imbalance beween precision and recall)
 f1 = f1_score(y_test, binary_preds, average='micro')
 hamming_loss_val = hamming_loss(y_test, binary_preds)
 
@@ -109,6 +113,8 @@ print("Hamming loss:", hamming_loss_val)
 
 #############################################
 # Experiment 1: Flood Types Attack Evaluation
+# Evaluates performance of model in detecting
+# specifically flood attack types
 #############################################
 print("\nFlood Types Attack Evaluation:")
 
@@ -140,3 +146,50 @@ for attack in attack_types:
         print(f"  F1-score: {attack_f1:.4f}")
     else:
         print(f"No test samples found for attack type: {attack}")
+
+
+##############################################
+# Experiment 2: Threshold Sensitivity Analysis
+# Experiment helps find optimal threshold for
+# better F1 score
+##############################################
+print("\nThreshold Sensitivity Analysis:")
+
+# Defined list of flood attack types
+flood_types = ['ARP Spoofing', 'DNS Flood', 'ICMP Flood', 'SYN Flood', 'UDP Flood']
+
+# Threshold values to evaluate
+threshold_values = np.arange(0.1, 1.0, 0.1)
+sensitivity_results = {attack: [] for attack in flood_types}
+
+# Analyze performance for different thresholds
+for threshold in threshold_values:
+    print(f"\nEvaluating for threshold: {threshold:.1f}")
+    for attack in flood_types:
+        if attack in y.columns:
+            # Filter test samples for the specific attack
+            attack_indices = y_test[attack] == 1
+            X_test_attack = X_test[attack_indices]
+            y_test_attack = y_test[attack_indices]
+
+            if len(X_test_attack) > 0:  # Ensure there are samples for this attack type
+                y_preds_attack = model.predict(X_test_attack)
+                binary_preds_attack = np.where(y_preds_attack >= threshold, 1, 0)
+
+                attack_f1 = f1_score(y_test_attack, binary_preds_attack, average='micro', zero_division=1)
+                sensitivity_results[attack].append((threshold, attack_f1))
+            else:
+                print(f"No test samples found for attack type: {attack}")
+
+# Plot the sensitivity analysis
+plt.figure(figsize=(10, 6))
+for attack, results in sensitivity_results.items():
+    thresholds, f1_scores = zip(*results)
+    plt.plot(thresholds, f1_scores, label=f"{attack}")
+
+plt.title("Threshold Sensitivity Analysis (F1-Score)")
+plt.xlabel("Threshold")
+plt.ylabel("F1-Score")
+plt.legend()
+plt.grid()
+plt.show()
