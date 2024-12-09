@@ -9,7 +9,7 @@ from sklearn.metrics import accuracy_score
 import matplotlib.pyplot as plt
 
 #Set this to 1 if you want to train a model, 0 if you want to load a trained model
-TRAIN_MODEL = 0
+TRAIN_MODEL = 1
 
 # Load and process data.
 df = pd.read_csv("ACI-IoT-2023.csv")
@@ -49,10 +49,10 @@ if(TRAIN_MODEL):
         layers.BatchNormalization(),
         layers.Dense(units=64, activation='relu'),
         layers.BatchNormalization(), 
-        layers.Dropout(0.5), 
+        layers.Dropout(0.2), 
         layers.Dense(units=32, activation='relu'),
         layers.BatchNormalization(),  
-        layers.Dropout(0.5), 
+        layers.Dropout(0.2), 
         layers.Dense(units=num_classes, activation='softmax')  
     ])
 
@@ -83,10 +83,10 @@ if(TRAIN_MODEL):
     history_df.loc[:, ['loss']].plot();
     print("Minimum validation loss: {}".format(history_df['val_loss'].min()))
 
-    model.save('my_model.h5') 
+    model.save('model_20_dropout.h5') 
 
 else:
-    model = load_model('my_model.h5')
+    model = load_model('model_20_dropout.h5')
 
 # Evaluate model on test set
 y_preds = model.predict(X_test)
