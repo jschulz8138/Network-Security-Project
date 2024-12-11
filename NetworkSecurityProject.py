@@ -9,7 +9,7 @@ from sklearn.metrics import accuracy_score
 import matplotlib.pyplot as plt
 
 #Set this to 1 if you want to train a model, 0 if you want to load a trained model
-TRAIN_MODEL = 0
+TRAIN_MODEL = 1
 
 # Load and process data.
 df = pd.read_csv("ACI-IoT-2023.csv")
