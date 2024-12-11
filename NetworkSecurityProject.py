@@ -41,6 +41,10 @@ X_train = X_train.iloc[:index_bigger,]
 y_val = y_train.iloc[index_bigger:]
 y_train = y_train.iloc[:index_bigger]
 
+
+# Model's Assigned Droupout rate
+dropout_rate = 0.15
+
 # Train or load model from file save
 if(TRAIN_MODEL):
     num_classes = 12  
@@ -49,10 +53,10 @@ if(TRAIN_MODEL):
         layers.BatchNormalization(),
         layers.Dense(units=64, activation='relu'),
         layers.BatchNormalization(), 
-        layers.Dropout(0.5), 
+        layers.Dropout(dropout_rate), 
         layers.Dense(units=32, activation='relu'),
         layers.BatchNormalization(),  
-        layers.Dropout(0.5), 
+        layers.Dropout(dropout_rate), 
         layers.Dense(units=num_classes, activation='softmax')  
     ])
 
@@ -83,15 +87,14 @@ if(TRAIN_MODEL):
     history_df.loc[:, ['loss']].plot();
     print("Minimum validation loss: {}".format(history_df['val_loss'].min()))
 
-    model.save('my_model.h5') 
-
+    model.save('my_model_dr' + str(dropout_rate) + '.h5') 
 else:
-    model = load_model('my_model.h5')
+    model = load_model('my_model_dr' + str(dropout_rate) + '.h5')
 
 # Evaluate model on test set
 y_preds = model.predict(X_test)
 y_preds.shape
-threshold = 0.5
+threshold = 0.1
 binary_preds = np.where(y_preds >= threshold, 1, 0)
 
 accuracy = accuracy_score(y_test, binary_preds)
@@ -103,6 +106,7 @@ recall = recall_score(y_test, binary_preds, average='micro')
 f1 = f1_score(y_test, binary_preds, average='micro')
 hamming_loss_val = hamming_loss(y_test, binary_preds)
 
+print("Prediction of model with " + str(dropout_rate * 100) + "% dropout rate.")
 print("Accuracy:", accuracy)
 print("Precision:", precision)
 print("Recall:", recall)
